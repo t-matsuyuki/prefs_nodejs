@@ -10,11 +10,8 @@
 
 <script>
 import PopulationTable from './components/PopulationTable.vue'
-const TARGET_PFEFCODE_MIN = 8
-const TARGET_PREFCODE_MAX = 14
-const API_URL1 = 'https://opendata.resas-portal.go.jp/api/v1/prefectures'
-const API_URL2 = 'https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=[prefCode]&cityCode=-&addArea='
-const headers  = {'X-API-KEY' : 'qC6sF6F9ylXndYA1deenJIaXKE36W812ZEKii8yt'}
+import { TARGET_PREFCODE_MIN, TARGET_PREFCODE_MAX, API_URL1, API_URL2, API_KEY, API2_TARGET_LABEL } from './constants/Constants'
+const headers  = {'X-API-KEY' : API_KEY}
 
 export default {
   components: {
@@ -39,10 +36,9 @@ export default {
         .then(response => response.json())
         .then(data => {
           prefData = data.result.filter(e => {
-            return parseInt(e['prefCode'],10) >= TARGET_PFEFCODE_MIN && parseInt(e['prefCode'], 10) <= TARGET_PREFCODE_MAX
+            return parseInt(e['prefCode'],10) >= TARGET_PREFCODE_MIN && parseInt(e['prefCode'], 10) <= TARGET_PREFCODE_MAX
           })
           this.prefectures = prefData
-          // console.log(`prefectures = ${JSON.stringify(this.prefectures)}`)
 
           // 対象都道府県分処理を繰り返す
           const fetchPopulationData = prefData.map(pref => {
@@ -54,7 +50,7 @@ export default {
             .then(data => {
               const population = data.result.data.find(
                 d => {
-                  if(d.label === '総人口') {
+                  if(d.label === API2_TARGET_LABEL) {
                     return d.data
                   }
                 }
@@ -67,6 +63,7 @@ export default {
             })
           })
 
+          // 全てのAPIデータの取得が完了したら処理
           Promise.all(fetchPopulationData)
             .then(populationData => {
               this.groupingYear(populationData)
